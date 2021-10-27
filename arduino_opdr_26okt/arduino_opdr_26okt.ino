@@ -1,30 +1,42 @@
-unsigned int ledValue;
+#include <Smoothed.h>
+
+float ledValue;
+float sensorInput;
+float inputSmoothed;
+Smoothed <float> mySensor;
 
 void setup() 
 {
   pinMode(10, OUTPUT);
   Serial.begin(9600);
+  mySensor.begin(SMOOTHED_AVERAGE, 20);
 }
 
 void loop() 
 {
-  if(analogRead(5)>900)
+  sensorInput = analogRead(5);
+  mySensor.add(sensorInput);
+  inputSmoothed = mySensor.get();
+    
+  if(inputSmoothed > 900)
   {
     ledValue = 255;
   }
-  else if (analogRead(5)<600)
+  else if (inputSmoothed < 600)
   {
     ledValue = 0;
   }
   else
   {
-    ledValue = map(analogRead(5), 600, 900, 0, 125);
+    ledValue = map(inputSmoothed, 600, 900, 0, 125);;
   }
   analogWrite(10, ledValue);
-  //tegen flicker: gemiddelde waarde nemen van al de inputswaarde
+  //smooth -> average van waarden nemen: tegen flicker (sensorwaarde verandert constant = zorgt voor licht flicker)
+  //https://github.com/MattFryer/Smoothed
 
-  Serial.print(analogRead(5));
+  Serial.print(sensorInput);
+  Serial.print(" ");
+  Serial.print(inputSmoothed);
   Serial.print(" ");
   Serial.println(ledValue);
-
 }
